@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+ <meta charset="utf-8">
+ <link rel="stylesheet" href="theme.css"/>
+ <link rel="stylesheet" href="options.css"/>
+</head>
+
+<body>
+ <fieldset>
+  <legend>General Settings</legend>
+  <form>
+   <div>
+    <p>
+     <span class="optionTitle">Default Behavior</span><br>
+     This sets the behavior for sites without a per-site setting (see below).
+    </p>
+    <p>
+     <input type="radio" name="destroyByDefault" value="false"> Hero Mode -- Do nothing, leave sites alone<br>
+     <input type="radio" name="destroyByDefault" value="true"> Zero Mode -- Remove the hero image (recommended)
+    </p>
+   </div>
+   <div>
+    <p>
+     <span class="optionTitle">Indication</span><br>
+     This is what happens when a hero image is zerod.
+    </p>
+    <p>
+     <input type="radio" name="indication" value="none"> No indication, just remove<br>
+     <input type="radio" name="indication" value="placeholder"> Show a placeholder
+    </p>
+   </div>
+   <div>
+    <p>
+     <span class="optionTitle">Detection Level</span><br>
+     This sets the minimum size of an image that can be consider a hero.  It must meet both requirements.
+    </p>
+    <p>
+     At least <input type="number" required id="minWidth" min="100" max="5000" step="100" size="5" maxlength="5"> pixels wide<br>
+     At least <input type="number" required id="minHeight" min="100" max="5000" step="100" size="5" maxlength="5"> pixels tall
+    </p>
+   </div>
+   <div>
+    <p>
+     <span class="optionTitle">Per-Site Settings</span><br>
+     These settings will override the default behavior for a specific site.
+    </p>
+    <p>
+     When you visit a site, and click on the toolbar icon to toggle Hero/Zero mode, that setting will be noted here.
+     You can remove a site from the list and it will go back to following the default behavior (see above).
+    </p>
+    <p>
+     Sites you currently have specific settings for:<br>
+     <span id="psSpan">(none)</span>
+    </p>
+   </div>
+  </form>
+ </fieldset>
+
+ <script src="common.js"></script>
+ <script src="options.js"></script>
+</body>
+</html>

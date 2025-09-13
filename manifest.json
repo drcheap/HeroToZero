@@ -1,0 +1,51 @@
+{
+   "manifest_version": 2,
+   "name": "HeroToZero",
+   "version": "0.1.0",
+   "author": "Dr. Cheap",
+   "description": "Hero Image Eliminator",
+   "homepage_url": "https://github.com/drcheap/HeroToZero",
+   "permissions": ["storage", "tabs", "http://*/*", "https://*/*"],
+
+   "browser_specific_settings": {
+      "gecko": {
+         "id": "herotozero@drcheap.com"
+      }
+   },
+
+   "icons": {
+     "16": "icons/logo-16.png",
+     "32": "icons/logo-32.png",
+     "48": "icons/logo-48.png",
+     "64": "icons/logo-64.png",
+     "96": "icons/logo-96.png",
+     "128": "icons/logo-128.png"
+   },
+
+   "options_ui": {
+     "page": "options.html",
+     "browser_style": false
+   },
+
+   "background": {
+      "scripts": ["common.js", "background.js"]
+   },
+
+   "browser_action": {
+      "default_title": "Initializing...",
+      "default_icon": {
+         "16": "icons/logo-16.png",
+         "32": "icons/logo-32.png"
+      }
+   },
+
+   "content_scripts": [
+       {
+         "matches": ["<all_urls>"],
+         "js": ["common.js", "content-script.js"],
+         "run_at": "document_idle"
+       }
+    ],
+
+    "web_accessible_resources": ["icons/placeholder.png"]
+}

@@ -1,0 +1,276 @@
+// Global state vars, set defaults here
+var _ready = false;
+var _destroyByDefault = DEFAULT_DESTROYBYDEFAULT;
+var _indication = DEFAULT_INDICATION;
+var _minWidth = DEFAULT_MINWIDTH;
+var _minHeight = DEFAULT_MINHEIGHT;
+var _persiteSettings = new Map();
+
+
+async function initialize(details)
+{
+   console.debug("Initializing...");
+
+   // Preset initialization
+   const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
+   if(Number.isInteger(storage.version))
+   {
+      if(storage.version < CURRENT_STORAGE_VERSION)
+      {
+         // Storage is old, do any necessary upgrades to remain compatible
+
+         if(storage.version == 1)
+         {
+            // (future storage updates here)
+         }
+
+         await browser.storage.local.set({"version": storage.version});
+      }
+   }
+   else
+   {
+      console.info("No storage version tag found, initializing...");
+      storage.version = CURRENT_STORAGE_VERSION;
+      await browser.storage.local.set({"version": storage.version});
+   }
+
+   if(storage.destroyByDefault === undefined)
+   {
+      console.info("No destroyByDefault setting found, initializing...");
+      storage.destroyByDefault = _destroyByDefault;
+      await browser.storage.local.set({"destroyByDefault": storage.destroyByDefault});
+   }
+
+   if(storage.indication === undefined)
+   {
+      console.info("No indication setting found, initializing...");
+      storage.indication = _indication;
+      await browser.storage.local.set({"indication": storage.indication});
+   }
+
+   if(storage.minWidth === undefined)
+   {
+      console.info("No minWidth setting found, initializing...");
+      storage.minWidth = 500;
+      await browser.storage.local.set({"minWidth": storage.minWidth});
+   }
+
+   if(storage.minHeight === undefined)
+   {
+      console.info("No minHeight setting found, initializing...");
+      storage.minHeight = 400;
+      await browser.storage.local.set({"minHeight": storage.minHeight});
+   }
+
+   if(storage.persiteSettings === undefined)
+   {
+      console.info("No persiteSettings setting found, initializing...");
+      storage.persiteSettings = new Map();
+      await browser.storage.local.set({"persiteSettings": [...storage.persiteSettings]});
+   }
+   else
+   {
+      storage.persiteSettings = new Map(storage.persiteSettings);
+   }
+
+   loadSettings();
+
+   console.debug("Initialization complete...");
+   console.debug("   Storage version: " + storage.version);
+   console.debug("   destroyByDefault: " + storage.destroyByDefault);
+   console.debug("   indication: " + storage.indication);
+   console.debug("   min w/h: " + storage.minWidth + '/' + storage.minHeight);
+   console.debug("   Per-site setting count: " + storage.persiteSettings.size);
+}
+
+async function loadSettings()
+{
+   const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
+   if(storage === undefined || storage.version === undefined || storage.version !== CURRENT_STORAGE_VERSION)
+   {
+      console.warn("Not loading settings because not fully initialized yet");
+      return; // Nothing to load yet
+   }
+
+   console.debug("Loading stored settings...");
+
+   const destroyByDefault = storage.destroyByDefault === "true";
+   if(destroyByDefault !== undefined)
+   {
+      _destroyByDefault = destroyByDefault;
+   }
+
+   const indication = storage.indication;
+   if(indication !== undefined)
+   {
+      _indication = indication;
+   }
+
+   const minWidth = storage.minWidth;
+   if(minWidth !== undefined)
+   {
+      _minWidth = minWidth;
+   }
+
+   const minHeight = storage.minHeight;
+   if(minHeight !== undefined)
+   {
+      _minHeight = minHeight;
+   }
+
+   const persiteSettings = storage.persiteSettings;
+   if(persiteSettings !== undefined)
+   {
+      _persiteSettings = new Map(persiteSettings);
+   }
+
+   setAllToolbarIcons();
+   _ready = true;
+}
+
+function isSiteDestroying(site)
+{
+   console.debug("isSiteDestroying(site)",site);
+   let result = _destroyByDefault;
+
+   if(site !== undefined && site.length > 0)
+   {
+      const thisSite = _persiteSettings.get(site);
+console.debug("_destroyByDefault",_destroyByDefault);
+console.debug("thisSite",thisSite);
+      result = thisSite ? thisSite.isDestroying : _destroyByDefault;
+   }
+
+   return result;
+}
+
+async function setSiteDestroying(site, destroying)
+{
+   if(site !== undefined && site.length > 0)
+   {
+      const thisSite = _persiteSettings.has(site) ? _persiteSettings.get(site) : {};
+      console.debug("Changing site setting: " + thisSite.isDestroying + " -> " + destroying);
+      thisSite.isDestroying = destroying;
+      _persiteSettings.set(site, thisSite);
+      await browser.storage.local.set({"persiteSettings": [..._persiteSettings]});
+   }
+}
+
+function getHostnameFromURL(url)
+{
+   try {
+      return new URL(url).hostname;
+   } catch {
+      return "";
+   }
+}
+
+function setAllToolbarIcons()
+{
+   browser.tabs.query({}).then(allTabs => allTabs.forEach(tab => setIconByURL(tab.url, tab.id)));
+}
+
+function setIconByURL(url, tabId)
+{
+   const site = getHostnameFromURL(url);
+   updateToolbarIcon(isSiteDestroying(site), tabId);
+}
+
+function updateToolbarIcon(thisSiteDestroying = false, tabId)
+{
+   let modeSuffix = "-h";
+   let title = "HeroToZero is in Hero Mode (Allowing hero images)";
+   if(thisSiteDestroying)
+   {
+      modeSuffix = "-z";
+      title = "HeroToZero is in Zero Mode (Destroying hero images)";
+   }
+
+   const iconParams = {
+      "path": {
+         "16": "icons/logo-16" + modeSuffix + ".png",
+         "32": "icons/logo-32" + modeSuffix + ".png"
+      }
+   };
+
+   const titleParams = {
+      "title": title
+   };
+
+   if(tabId !== undefined && tabId >= 0)
+   {
+      iconParams.tabId = tabId;
+      titleParams.tabId = tabId;
+   }
+
+   browser.browserAction.setIcon(iconParams);
+   browser.browserAction.setTitle(titleParams);
+
+   console.debug("Set icon" + (tabId ? "" : " for tab " + tabId) + ": " + title);
+}
+
+
+function navigationHandler(tabId, changeInfo, tab)
+{
+   console.debug("Navigation on tab " + tabId);
+   setIconByURL(changeInfo.url, tabId);
+}
+
+async function toggleSite(tab)
+{
+   const site = getHostnameFromURL(tab.url);
+   console.info("Toggle from tab " + tab.id + (site ? " at " + site : ""));
+   if(site.length > 0)
+   {
+      // Save new setting
+      const thisSiteDestroying = !isSiteDestroying(site);
+      await setSiteDestroying(site, thisSiteDestroying);
+
+      // Update this tab (and let it know about that)
+      updateToolbarIcon(thisSiteDestroying, tab.id);
+      browser.tabs.sendMessage(tab.id, {msgType: MSGTYPE_TOGGLE_SITE, isSiteDestroying: thisSiteDestroying});
+
+      // Also update icon for any other visible tabs at this same site
+      browser.tabs.query({"active": true, "currentWindow": false}).then(allTabs => allTabs.forEach(otherTab => {
+         if(otherTab.id !== tab.id && getHostnameFromURL(otherTab.url) === site)
+         {
+            updateToolbarIcon(thisSiteDestroying, otherTab.id);
+         }
+      }));
+
+      // And in case the options page is open, let it know as well
+      browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_PERSITE});
+   }
+}
+
+function getSiteConfig(site)
+{
+   const result = {};
+   result.ready = _ready;
+   result.isSiteDestroying = isSiteDestroying(site);
+   result.indication = _indication;
+   result.minWidth = _minWidth;
+   result.minHeight = _minHeight;
+   return result;
+}
+
+
+browser.runtime.onInstalled.addListener(initialize);
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+   console.debug("Message received", message);
+   if(message.msgType === MSGTYPE_REFRESH_STATE)
+   {
+      loadSettings();
+   }
+   else if(message.msgType === MSGTYPE_GET_SITE_CONFIG)
+   {
+
+      return Promise.resolve(getSiteConfig(getHostnameFromURL(message.url)));
+   }
+});
+browser.browserAction.onClicked.addListener(toggleSite);
+browser.tabs.onUpdated.addListener(navigationHandler, {properties: ["url"]});
+
+const manifest = browser.runtime.getManifest();
+console.info(manifest.name + " version " + manifest.version + " by " + manifest.author);
+loadSettings();
