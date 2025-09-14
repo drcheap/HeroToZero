@@ -39,12 +39,12 @@
          "32": "icons/logo-32-dark.png"
       },
       "theme_icons": [{
-            "light": "icons/logo_16_light.png",
-            "dark": "icons/logo_16_dark.png",
+            "light": "icons/logo-16-light.png",
+            "dark": "icons/logo-16-dark.png",
             "size": 16
          }, {
-            "light": "icons/logo_32_light.png",
-            "dark": "icons/logo_32_dark.png",
+            "light": "icons/logo-32-light.png",
+            "dark": "icons/logo-32-dark.png",
             "size": 32
       }]
    },
