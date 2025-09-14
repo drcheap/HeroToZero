@@ -24,21 +24,25 @@
    <div>
     <p>
      <span class="optionTitle">Indication</span><br>
-     This is what happens when a hero image is zerod.
+     This is what happens when a hero image is zerod.  Note that when using the <code>no indication</code> mode you will lose the ability to click the placeholder to restore the hero.
     </p>
     <p>
      <input type="radio" name="indication" value="none"> No indication, just remove<br>
-     <input type="radio" name="indication" value="placeholder"> Show a placeholder
+     <input type="radio" name="indication" value="placeholder"> Show a placeholder (recommended)
     </p>
    </div>
    <div>
     <p>
      <span class="optionTitle">Detection Level</span><br>
+     There are various factors that go into detection, but one of them falls back on absolute image size.
      This sets the minimum size of an image that can be consider a hero.  It must meet both requirements.
     </p>
     <p>
      At least <input type="number" required id="minWidth" min="100" max="5000" step="100" size="5" maxlength="5"> pixels wide<br>
      At least <input type="number" required id="minHeight" min="100" max="5000" step="100" size="5" maxlength="5"> pixels tall
+    </p>
+    <p>
+     Note: (this is preliminary, a future version will change to a Low/Medium/High sensitivity factor)
     </p>
    </div>
    <div>
@@ -47,7 +51,7 @@
      These settings will override the default behavior for a specific site.
     </p>
     <p>
-     When you visit a site, and click on the toolbar icon to toggle Hero/Zero mode, that setting will be noted here.
+     When you visit a site and click on the toolbar icon to toggle Hero/Zero mode that setting will be noted here.
      You can remove a site from the list and it will go back to following the default behavior (see above).
     </p>
     <p>

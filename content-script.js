@@ -1,8 +1,12 @@
 const PLACEHOLDER_WIDTH = 16;
 const PLACEHOLDER_HEIGHT = 16;
 const PLACEHOLDER_TEXT = "Hero image replaced by HeroToZero";
+const PLACEHOLDER_TEXT_RESTORE = "Click to restore orignal.";
 
 let _didDestroy = false;
+let _imgCount = 0;
+let _hero = null;
+let _zero = null;
 
 function h2zCheck()
 {
@@ -25,98 +29,102 @@ function h2zCheck()
 
 function zeroTheHero(indication, minWidth, minHeight)
 {
-   if(document.querySelector("#DestroyedByH2Z"))
+   const images = document.getElementsByTagName('img');
+   if(images.length === _imgCount && document.querySelector(".DestroyedByH2Z"))
    {
-      // Already did our thing
+      console.debug(`H2Z CS skip this round`);
       return;
    }
 
-   const images = document.getElementsByTagName('img');
-   console.info(`H2Z CS ${images.length} images`);
-   if(images.length > 0)
+   _imgCount = images.length;
+
+   console.info(`H2Z CS ${_imgCount} images`);
+   if(_imgCount > 0)
    {
       const screenArea = window.innerWidth * window.innerHeight;
 
       let heroImage = null;
       for(const img of images)
       {
-         // TODO: Improve the logic of what constitutes the hero
-
          const imgStartPct = img.y / window.innerHeight;
          const imgArea = img.clientWidth * img.clientHeight;
          const windowCoverage = imgArea / screenArea;
 
-console.debug(`H2Z CS imgStartPct=${Math.round(imgStartPct * 100)} windowCoverage=${Math.round(windowCoverage * 100)}`,);
+         console.debug(`H2Z CS Image at ${img.y} (${Math.round(imgStartPct * 100)}%) is ${img.clientWidth}x${img.clientHeight} (${Math.round(windowCoverage * 100)}%) ${img.src}`);
 
-        if(img.y > 10 && img.y < window.innerHeight * 0.25 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.50)
+         // Really excessive
+         if(img.y > 10 && img.y < window.innerHeight * 0.25 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.45)
          {
-            // Instant winner!
             heroImage = img;
             console.debug(`H2Z CS Instant winner A!`);
             break;
          }
 
-         if(img.y > 10 && img.y < window.innerHeight * 0.50 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.25)
+         // Kinda big & bad
+         if(img.y > 20 && img.y < window.innerHeight * 0.50 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.35)
          {
-            // Instant winner!
             heroImage = img;
             console.debug(`H2Z CS Instant winner B!`);
             break;
          }
 
-         if(img.y > 10 && img.y < window.innerHeight * 0.70 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.15)
+         // Still hefty
+         if(img.y > 40 && img.y < window.innerHeight * 0.70 && imgArea > 0 && screenArea > 0 && imgArea / screenArea > 0.25)
          {
-            // Instant winner!
             heroImage = img;
             console.debug(`H2Z CS Instant winner C!`);
             break;
          }
 
-console.debug(`H2Z CS Image at ${img.y}: ${img.clientWidth}x${img.clientHeight} for ${img.src}`);
-
-         if(img.y > 10 && img.y < window.innerHeight * 0.75 && img.clientWidth > minWidth && img.clientHeight > minHeight)
-         //if(img.clientWidth > minWidth && img.clientHeight > minHeight)
+         // Big enough
+         if(img.y > 20 && img.y < window.innerHeight * 0.80 && img.clientWidth > minWidth && img.clientHeight > minHeight)
          {
             console.debug(`H2Z CS Candidate ${img.clientWidth}x${img.clientHeight} for ${img.src}`);
 
             if(!heroImage || img.clientWidth > heroImage.clientWidth || img.clientHeight > heroImage.clientHeight)
             {
                heroImage = img;
-               console.debug(`H2Z CS New largest!`);
+               console.debug(`H2Z CS New largest`);
             }
-         }
-         else
-         {
-            console.debug(`H2Z CS Nope for ${img.clientWidth}x${img.clientHeight}`);
          }
       }
 
-      console.info(`H2Z CS heroImage`,heroImage);
+      console.info(`H2Z CS heroImage`, heroImage);
       if(heroImage instanceof HTMLImageElement)
       {
          if(indication === "none")
          {
             heroImage.remove();
             const marker = document.createElement('a');
-            marker.id = "DestroyedByH2Z";
+            addClass(marker, "DestroyedByH2Z");
             marker.style = "display: none";
             body.appendChild(marker);
          }
          else
          {
-            const replacement = document.createElement('img');
-            replacement.id = "DestroyedByH2Z";
-            replacement.src = browser.runtime.getURL('icons/placeholder.png');
-            replacement.width = PLACEHOLDER_WIDTH;
-            replacement.height = PLACEHOLDER_HEIGHT;
-            replacement.alt = PLACEHOLDER_TEXT;
-            replacement.style = "cursor: help";
-            replacement.title = PLACEHOLDER_TEXT;
-            heroImage.parentNode.replaceChild(replacement, heroImage);
+            _hero = heroImage;
+            _zero = document.createElement('img');
+            addClass(_zero, "DestroyedByH2Z");
+            _zero.src = browser.runtime.getURL('icons/placeholder.png');
+            _zero.width = PLACEHOLDER_WIDTH;
+            _zero.height = PLACEHOLDER_HEIGHT;
+            _zero.alt = PLACEHOLDER_TEXT;
+            _zero.style = "cursor: help";
+            _zero.title = PLACEHOLDER_TEXT + ". " + PLACEHOLDER_TEXT_RESTORE;
+            _zero.addEventListener("click", restoreHero);
+            _hero.parentNode.replaceChild(_zero, _hero);
          }
 
          _didDestroy = true;
       }
+   }
+}
+
+function restoreHero()
+{
+   if(_hero && _zero)
+   {
+      _zero.parentNode.replaceChild(_hero, _zero);
    }
 }
 

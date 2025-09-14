@@ -51,21 +51,21 @@ async function initialize(details)
    if(storage.minWidth === undefined)
    {
       console.info("No minWidth setting found, initializing...");
-      storage.minWidth = 500;
+      storage.minWidth = _minWidth;
       await browser.storage.local.set({"minWidth": storage.minWidth});
    }
 
    if(storage.minHeight === undefined)
    {
       console.info("No minHeight setting found, initializing...");
-      storage.minHeight = 400;
+      storage.minHeight = _minHeight;
       await browser.storage.local.set({"minHeight": storage.minHeight});
    }
 
    if(storage.persiteSettings === undefined)
    {
       console.info("No persiteSettings setting found, initializing...");
-      storage.persiteSettings = new Map();
+      storage.persiteSettings = _persiteSettings;
       await browser.storage.local.set({"persiteSettings": [...storage.persiteSettings]});
    }
    else
@@ -94,10 +94,10 @@ async function loadSettings()
 
    console.debug("Loading stored settings...");
 
-   const destroyByDefault = storage.destroyByDefault === "true";
+   const destroyByDefault = storage.destroyByDefault;
    if(destroyByDefault !== undefined)
    {
-      _destroyByDefault = destroyByDefault;
+      _destroyByDefault = storage.destroyByDefault || storage.destroyByDefault === "true" ;  // Could be boolean or string in storage, need as boolean
    }
 
    const indication = storage.indication;
@@ -130,14 +130,14 @@ async function loadSettings()
 
 function isSiteDestroying(site)
 {
-   console.debug("isSiteDestroying(site)",site);
+//   console.debug("isSiteDestroying(site)",site);
    let result = _destroyByDefault;
 
    if(site !== undefined && site.length > 0)
    {
       const thisSite = _persiteSettings.get(site);
-console.debug("_destroyByDefault",_destroyByDefault);
-console.debug("thisSite",thisSite);
+//console.debug("_destroyByDefault",_destroyByDefault);
+//console.debug("thisSite",thisSite);
       result = thisSite ? thisSite.isDestroying : _destroyByDefault;
    }
 
@@ -206,7 +206,7 @@ function updateToolbarIcon(thisSiteDestroying = false, tabId)
    browser.browserAction.setIcon(iconParams);
    browser.browserAction.setTitle(titleParams);
 
-   console.debug("Set icon" + (tabId ? "" : " for tab " + tabId) + ": " + title);
+//   console.debug("Set icon" + (tabId ? "" : " for tab " + tabId) + ": " + title);
 }
 
 
@@ -238,8 +238,12 @@ async function toggleSite(tab)
          }
       }));
 
-      // And in case the options page is open, let it know as well
-      browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_PERSITE});
+      // In case the options page is open, let it know to refresh the site list
+      browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_PERSITE}).catch(err => {
+         if(err.message !== "Could not establish connection. Receiving end does not exist.") {
+            console.error("Messaging error:", err);
+         }
+      });
    }
 }
 

@@ -4,29 +4,6 @@ const MODE_PERSITE = "persite";
 
 var operatingMode = MODE_PERSITE;
 
-// hasClass, addClass, removeClass functions borrowed (and reformatted) from: https://stackoverflow.com/questions/6787383
-function hasClass(ele,cls)
-{
-   return !!ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
-}
-
-function addClass(ele,cls)
-{
-   if(!hasClass(ele,cls))
-   {
-      ele.className += " " + cls;
-   }
-}
-
-function removeClass(ele,cls)
-{
-   if (hasClass(ele,cls))
-   {
-      const reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-      ele.className = ele.className.replace(reg,' ');
-   }
-}
-
 async function populatePerSite()
 {
    const psSpan = document.querySelector("#psSpan");
@@ -43,7 +20,7 @@ async function populatePerSite()
       const li = document.createElement("li");
 
       const hzSpan = document.createElement("span");
-      hzSpan.textContent = (thisSite.isDestroying ? "Zero" : "Hero")
+      hzSpan.textContent = (thisSite.isDestroying ? "Zero Mode" : "Hero Mode")
       addClass(hzSpan, thisSite.isDestroying ? "zeroMode" : "heroMode");
 
       const delSpan = document.createElement("span");
@@ -53,7 +30,7 @@ async function populatePerSite()
       addClass(delSpan, "removeIcon");
 
       li.appendChild(hzSpan);
-      li.append(" " + site + " ");
+      li.append(" for " + site + " ");
       li.appendChild(delSpan);
 
       ul.appendChild(li);
