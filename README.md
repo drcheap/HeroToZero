@@ -11,7 +11,7 @@ Notable features:
 * Choose a default behavior for all sites
 * Override the behavior either way on a per-site basis
 * Show a placeholder where the hero once was, which can be clicked to restore the image if needed.
-* Coming Soon(TM) -- Adjust the sensitivity to be more lenient or more aggresive in the hunt.
+* Coming Soon(TM) -- Adjust the sensitivity to be more lenient or more aggressive in the hunt.
 
 [Official Install Page]
 
