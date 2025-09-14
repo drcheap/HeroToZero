@@ -9,7 +9,10 @@
 
    "browser_specific_settings": {
       "gecko": {
-         "id": "herotozero@drcheap.com"
+         "id": "herotozero@drcheap.com",
+         "data_collection_permissions": {
+            "required": ["none"]
+         }
       }
    },
 
