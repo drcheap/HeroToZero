@@ -9,7 +9,7 @@
    id="svg1"
    inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
    sodipodi:docname="logo.svg"
-   inkscape:export-filename="placeholder.png"
+   inkscape:export-filename="logo.png"
    inkscape:export-xdpi="16.933332"
    inkscape:export-ydpi="16.933332"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -36,7 +36,7 @@
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showguides="true"
-     inkscape:export-bgcolor="#ffffffff">
+     showgrid="false">
     <sodipodi:guide
        position="12,12"
        orientation="-1,0"

@@ -178,18 +178,21 @@ function setIconByURL(url, tabId)
 
 function updateToolbarIcon(thisSiteDestroying = false, tabId)
 {
-   let modeSuffix = "-h";
+   let hORz = "h";
    let title = "HeroToZero is in Hero Mode (Allowing hero images)";
    if(thisSiteDestroying)
    {
-      modeSuffix = "-z";
+      hORz = "z";
       title = "HeroToZero is in Zero Mode (Destroying hero images)";
    }
 
+   // Must do this kludge because browserAction.setIcon does not yet support the theme_icons structured object
+   // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1416871
+   const lightORdark = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark";
    const iconParams = {
       "path": {
-         "16": "icons/logo-16" + modeSuffix + ".png",
-         "32": "icons/logo-32" + modeSuffix + ".png"
+         "16": "icons/logo-" + hORz + "-16-" + lightORdark + ".png",
+         "32": "icons/logo-" + hORz + "-32-" + lightORdark + ".png",
       }
    };
 
@@ -274,6 +277,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 browser.browserAction.onClicked.addListener(toggleSite);
 browser.tabs.onUpdated.addListener(navigationHandler, {properties: ["url"]});
+
+window.matchMedia("(prefers-color-scheme: dark)").addListener(() => {
+  setAllToolbarIcons(); // Upodate icons when the theme changes
+});
 
 const manifest = browser.runtime.getManifest();
 console.info(manifest.name + " version " + manifest.version + " by " + manifest.author);

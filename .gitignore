@@ -46,3 +46,5 @@ Temporary Items
 # Release builds of the addon
 releases
 
+# These icons can be produced from SVGs via scripting
+/icons/*.png
