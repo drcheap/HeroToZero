@@ -47,4 +47,5 @@ Temporary Items
 releases
 
 # These icons can be produced from SVGs via scripting
-/icons/*.png
+/icons/logo*.png
+/icons/placeholder.png
