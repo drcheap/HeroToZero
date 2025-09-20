@@ -6,10 +6,10 @@ var _minWidth = DEFAULT_MINWIDTH;
 var _minHeight = DEFAULT_MINHEIGHT;
 var _persiteSettings = new Map();
 
-
+// After installation or an update, we need to make sure the storage area is good to go
 async function initialize(details)
 {
-   console.debug("Initializing...");
+   console.debug("H2Z B Initializing...");
 
    // Preset initialization
    const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
@@ -29,42 +29,42 @@ async function initialize(details)
    }
    else
    {
-      console.info("No storage version tag found, initializing...");
+      console.info("H2Z B No storage version tag found, initializing...");
       storage.version = CURRENT_STORAGE_VERSION;
       await browser.storage.local.set({"version": storage.version});
    }
 
    if(storage.destroyByDefault === undefined)
    {
-      console.info("No destroyByDefault setting found, initializing...");
+      console.info("H2Z B No destroyByDefault setting found, initializing...");
       storage.destroyByDefault = _destroyByDefault;
       await browser.storage.local.set({"destroyByDefault": storage.destroyByDefault});
    }
 
    if(storage.indication === undefined)
    {
-      console.info("No indication setting found, initializing...");
+      console.info("H2Z B No indication setting found, initializing...");
       storage.indication = _indication;
       await browser.storage.local.set({"indication": storage.indication});
    }
 
    if(storage.minWidth === undefined)
    {
-      console.info("No minWidth setting found, initializing...");
+      console.info("H2Z B No minWidth setting found, initializing...");
       storage.minWidth = _minWidth;
       await browser.storage.local.set({"minWidth": storage.minWidth});
    }
 
    if(storage.minHeight === undefined)
    {
-      console.info("No minHeight setting found, initializing...");
+      console.info("H2Z B No minHeight setting found, initializing...");
       storage.minHeight = _minHeight;
       await browser.storage.local.set({"minHeight": storage.minHeight});
    }
 
    if(storage.persiteSettings === undefined)
    {
-      console.info("No persiteSettings setting found, initializing...");
+      console.info("H2Z B No persiteSettings setting found, initializing...");
       storage.persiteSettings = _persiteSettings;
       await browser.storage.local.set({"persiteSettings": [...storage.persiteSettings]});
    }
@@ -75,7 +75,7 @@ async function initialize(details)
 
    loadSettings();
 
-   console.debug("Initialization complete...");
+   console.debug("H2Z B Initialization complete...");
    console.debug("   Storage version: " + storage.version);
    console.debug("   destroyByDefault: " + storage.destroyByDefault);
    console.debug("   indication: " + storage.indication);
@@ -83,16 +83,17 @@ async function initialize(details)
    console.debug("   Per-site setting count: " + storage.persiteSettings.size);
 }
 
+// Load up all the user preferences so we know how to behave
 async function loadSettings()
 {
    const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
    if(storage === undefined || storage.version === undefined || storage.version !== CURRENT_STORAGE_VERSION)
    {
-      console.warn("Not loading settings because not fully initialized yet");
+      console.warn("H2Z B Not loading settings because not fully initialized yet");
       return; // Nothing to load yet
    }
 
-   console.debug("Loading stored settings...");
+   console.debug("H2Z B Loading stored settings...");
 
    const destroyByDefault = storage.destroyByDefault;
    if(destroyByDefault !== undefined)
@@ -128,34 +129,34 @@ async function loadSettings()
    _ready = true;
 }
 
+// Determine if we should be destroying heros on a given site based on the current settings
 function isSiteDestroying(site)
 {
-//   console.debug("isSiteDestroying(site)",site);
    let result = _destroyByDefault;
 
    if(site !== undefined && site.length > 0)
    {
       const thisSite = _persiteSettings.get(site);
-//console.debug("_destroyByDefault",_destroyByDefault);
-//console.debug("thisSite",thisSite);
       result = thisSite ? thisSite.isDestroying : _destroyByDefault;
    }
 
    return result;
 }
 
+// Change preference for a given site
 async function setSiteDestroying(site, destroying)
 {
    if(site !== undefined && site.length > 0)
    {
       const thisSite = _persiteSettings.has(site) ? _persiteSettings.get(site) : {};
-      console.debug("Changing site setting: " + thisSite.isDestroying + " -> " + destroying);
+      console.debug("H2Z B Changing site setting: " + thisSite.isDestroying + " -> " + destroying);
       thisSite.isDestroying = destroying;
       _persiteSettings.set(site, thisSite);
       await browser.storage.local.set({"persiteSettings": [..._persiteSettings]});
    }
 }
 
+// Quick'n'dirty way to get just the hostname portion
 function getHostnameFromURL(url)
 {
    try {
@@ -165,17 +166,20 @@ function getHostnameFromURL(url)
    }
 }
 
+// Make sure all toolbars in all windows are indicating correctly
 function setAllToolbarIcons()
 {
    browser.tabs.query({}).then(allTabs => allTabs.forEach(tab => setIconByURL(tab.url, tab.id)));
 }
 
+// Make sure a toolbar accurately reflects settings based on currently loaded site
 function setIconByURL(url, tabId)
 {
    const site = getHostnameFromURL(url);
    updateToolbarIcon(isSiteDestroying(site), tabId);
 }
 
+// Change the toolbar based on current settings
 function updateToolbarIcon(thisSiteDestroying = false, tabId)
 {
    let hORz = "h";
@@ -208,21 +212,19 @@ function updateToolbarIcon(thisSiteDestroying = false, tabId)
 
    browser.browserAction.setIcon(iconParams);
    browser.browserAction.setTitle(titleParams);
-
-//   console.debug("Set icon" + (tabId ? "" : " for tab " + tabId) + ": " + title);
 }
 
-
+// Any time the URL changes, we need to re-evaluate the icon
 function navigationHandler(tabId, changeInfo, tab)
 {
-   console.debug("Navigation on tab " + tabId);
    setIconByURL(changeInfo.url, tabId);
 }
 
+// Change the hero/zero mode for the site loaded in the given tab
 async function toggleSite(tab)
 {
    const site = getHostnameFromURL(tab.url);
-   console.info("Toggle from tab " + tab.id + (site ? " at " + site : ""));
+   console.info("H2Z B Toggle from tab " + tab.id + (site ? " at " + site : ""));
    if(site.length > 0)
    {
       // Save new setting
@@ -244,12 +246,13 @@ async function toggleSite(tab)
       // In case the options page is open, let it know to refresh the site list
       browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_PERSITE}).catch(err => {
          if(err.message !== "Could not establish connection. Receiving end does not exist.") {
-            console.error("Messaging error:", err);
+            console.error("H2Z B Messaging error:", err);
          }
       });
    }
 }
 
+// Get a configuration object for this site (useful to pass to content script)
 function getSiteConfig(site)
 {
    const result = {};
@@ -262,16 +265,19 @@ function getSiteConfig(site)
 }
 
 
+// Messaging / event handling
+
 browser.runtime.onInstalled.addListener(initialize);
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-   console.debug("Message received", message);
+   console.debug("H2Z B Message received", message);
    if(message.msgType === MSGTYPE_REFRESH_STATE)
    {
+      // Settings were changed elsewhere, make sure we have the latest values
       loadSettings();
    }
    else if(message.msgType === MSGTYPE_GET_SITE_CONFIG)
    {
-
+      // A request for site configuration, load it up and pass it back
       return Promise.resolve(getSiteConfig(getHostnameFromURL(message.url)));
    }
 });

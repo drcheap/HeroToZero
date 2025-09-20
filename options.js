@@ -1,9 +1,4 @@
-/* These constants should match those in background.js */
-const MODE_GLOBAL = "global";
-const MODE_PERSITE = "persite";
-
-var operatingMode = MODE_PERSITE;
-
+// Fill in the list of site specific settings
 async function populatePerSite()
 {
    const psSpan = document.querySelector("#psSpan");
@@ -16,7 +11,6 @@ async function populatePerSite()
 
    for (const [site, thisSite] of persiteSettings.entries())
    {
-      console.debug("Found item " + site + ": " + thisSite.isDestroying);
       const li = document.createElement("li");
 
       const hzSpan = document.createElement("span");
@@ -47,16 +41,12 @@ async function populatePerSite()
    }
 }
 
-function doOnLoad()
-{
-   loadOptions();
-}
-
+// Retrieve all the persisted settings
 async function loadOptions()
 {
-   console.debug("Loading options ...");
+   console.debug("H2Z O Loading options ...");
 
-   const storage = await browser.storage.local.get(["destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
+   const storage = await browser.storage.local.get(["destroyByDefault","indication","minWidth","minHeight"]);
 
    document.querySelector("input[name=destroyByDefault][value=" + storage.destroyByDefault + "]").checked = true;
    document.querySelector("input[name=indication][value=" + storage.indication + "]").checked = true;
@@ -65,52 +55,57 @@ async function loadOptions()
    populatePerSite();
 }
 
+// Apply a change of setting: destroyByDefault
 async function setDestroyByDefault()
 {
    const destroyByDefault = document.querySelector("input[name=destroyByDefault]:checked").value;
-   console.info("Changing destroyByDefault to: " + destroyByDefault);
+   console.info("H2Z O Changing destroyByDefault to: " + destroyByDefault);
    browser.storage.local.set({"destroyByDefault": destroyByDefault});
    browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_STATE});
 }
 
+// Apply a change of setting: indication
 async function setIndication()
 {
    const indication = document.querySelector("input[name=indication]:checked").value;
-   console.info("Changing indication to: " + indication);
+   console.info("H2Z O Changing indication to: " + indication);
    browser.storage.local.set({"indication": indication});
    browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_STATE});
 }
 
+// Apply a change of setting: minWidth
 async function setMinWidth()
 {
    let minWidth = parseInt(document.querySelector("#minWidth").value);
    if(!Number.isInteger(minWidth))
    {
-      console.warn("Ignoring invalid minWidth: ",minWidth);
+      console.warn("H2Z O Ignoring invalid minWidth: ",minWidth);
       minWidth = DEFAULT_MINWIDTH;
    }
 
-   console.info("Changing minWidth to: " + minWidth);
+   console.info("H2Z O Changing minWidth to: " + minWidth);
    document.querySelector("#minWidth").value = minWidth;
    browser.storage.local.set({"minWidth": minWidth});
    browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_STATE});
 }
 
+// Apply a change of setting: minHeight
 async function setMinHeight()
 {
    let minHeight = parseInt(document.querySelector("#minHeight").value);
    if(!Number.isInteger(minHeight))
    {
-      console.warn("Ignoring invalid minHeight: ",minHeight);
+      console.warn("H2Z O Ignoring invalid minHeight: ",minHeight);
       minHeight = DEFAULT_MINHEIGHT;
    }
 
-   console.info("Changing minHeight to: " + minHeight);
+   console.info("H2Z O Changing minHeight to: " + minHeight);
    document.querySelector("#minHeight").value = minHeight;
    browser.storage.local.set({"minHeight": minHeight});
    browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_STATE});
 }
 
+// Get rid of a site specific override so that instead follows the default behavior
 async function removeSite(e)
 {
    e.preventDefault();
@@ -123,13 +118,16 @@ async function removeSite(e)
    browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_STATE});
 }
 
-document.addEventListener("DOMContentLoaded", doOnLoad);
+
+// Messaging / event handling
+
+document.addEventListener("DOMContentLoaded", loadOptions);
 document.querySelectorAll("input[name=destroyByDefault]").forEach(i => { i.addEventListener("change", setDestroyByDefault) });
 document.querySelectorAll("input[name=indication]").forEach(i => { i.addEventListener("change", setIndication) });
 document.querySelector("#minWidth").addEventListener("change", setMinWidth);
 document.querySelector("#minHeight").addEventListener("change", setMinHeight);
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-   console.debug("Message received", message);
+   console.debug("H2Z O Message received", message);
    if(message.msgType === MSGTYPE_REFRESH_PERSITE)
    {
       populatePerSite();
