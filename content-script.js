@@ -4,6 +4,12 @@ const PLACEHOLDER_HEIGHT = 16;
 const PLACEHOLDER_TEXT = "Hero image replaced by HeroToZero";
 const PLACEHOLDER_TEXT_RESTORE = "Click to restore orignal.";
 
+// A list of element types that we should not destroy inside of
+const ELEMENTS_ABORT = ["ASIDE","BODY","LI","MAIN","NAV"];
+
+// A list of valid element types that we can expand the hero scope up to
+const ELEMENTS_EXPAND_INTO = ["A","A","B","BLOCKQUOTE","BUTTON","DIV","EM","FIGURE","H1","H2","H3","H4","H5","H6","HEADER","I","LABEL","OBJECT","P","PICTURE","Q","SECTION","SPAN","SPAN","STRONG"];
+
 let _didDestroy = false;
 let _imgCount = 0;
 let _hero = null;
@@ -26,7 +32,7 @@ function h2zCheck()
          setTimeout(_ => zeroTheHero(response.indication, response.minWidth, response.minHeight), 1500);
       }
    }).catch(error => {
-      console.error("h2zCheck:", error);
+      console.error("H2Z CS check failed", error);
    });
 }
 
@@ -92,35 +98,42 @@ function zeroTheHero(indication, minWidth, minHeight)
          }
       }
 
-      if(heroElement instanceof HTMLImageElement || parentElement instanceof HTMLPictureElement || parentElement.tagName === 'FIGURE')
+      if(heroElement && (heroElement instanceof HTMLImageElement || heroElement instanceof HTMLPictureElement || heroElement.tagName === 'FIGURE'))
       {
-         // We got one!  Now for a bit of refinement
+         // We got one!  Now for a bit of expansion
          heroElement = considerAncestors(heroElement);
-
          console.info(`H2Z CS heroElement`, heroElement);
 
-         // Target acquired, time take it out
-         if(indication === "none")
+         if(heroElement)
          {
-            heroElement.remove();
-         }
-         else
-         {
-            _hero = heroElement;
-            _zero = document.createElement('img');
-            _zero.src = PLACEHOLDER_SRC;
-            _zero.width = PLACEHOLDER_WIDTH;
-            _zero.height = PLACEHOLDER_HEIGHT;
-            _zero.style = "cursor: help";
-            _zero.style = `width: ${PLACEHOLDER_WIDTH}`;
-            _zero.style = `height: ${PLACEHOLDER_HEIGHT}`;
-            _zero.alt = PLACEHOLDER_TEXT;
-            _zero.title = PLACEHOLDER_TEXT + ". " + PLACEHOLDER_TEXT_RESTORE;
-            _zero.addEventListener("click", restoreHero);
-            _hero.parentNode.replaceChild(_zero, _hero);
-         }
+            // Target acquired, time take it out
+            if(indication === "none")
+            {
+               heroElement.remove();
+            }
+            else
+            {
+               _hero = heroElement;
+               _zero = document.createElement('img');
+               _zero.src = PLACEHOLDER_SRC;
+               _zero.width = PLACEHOLDER_WIDTH;
+               _zero.height = PLACEHOLDER_HEIGHT;
+               _zero.style = "cursor: help";
+               _zero.style = `width: ${PLACEHOLDER_WIDTH}`;
+               _zero.style = `height: ${PLACEHOLDER_HEIGHT}`;
+               _zero.alt = PLACEHOLDER_TEXT;
+               _zero.title = PLACEHOLDER_TEXT + ". " + PLACEHOLDER_TEXT_RESTORE;
+               _zero.addEventListener("click", restoreHero);
 
-         _didDestroy = true;
+               try {
+                  _hero.parentNode.replaceChild(_zero, _hero);
+               } catch(error) {
+                  console.error("H2Z CS replace failed", error);
+               }
+            }
+
+            _didDestroy = true;
+         }
       }
    }
 }
@@ -129,17 +142,32 @@ function zeroTheHero(indication, minWidth, minHeight)
 function considerAncestors(element)
 {
    let parentElement = element.parentElement;
-   if(parentElement && (element.src === PLACEHOLDER_SRC || parentElement instanceof HTMLPictureElement || parentElement.tagName === 'FIGURE' || parentElement.children.length === 1))
+   if(parentElement)
    {
-      console.debug(`H2Z CS going up to`, parentElement);
+      const tag = parentElement.tagName;
 
-      // Lots of things could be preventing a size reduction, so check for...
-      //    A previously zerod hero
-      //    A <picture> that contains our hero
-      //    A <figure> that contains our hero
-      //    Any other element that contains our hero and nothing else
-      // Any of these is grounds for expanding our scope
-      return considerAncestors(parentElement); // This is our new candidate, but keep checking higher
+      if(!tag)
+      {
+         return element;  // Can't determine parent type, stop here
+      }
+
+      if(ELEMENTS_ABORT.includes(tag))
+      {
+         return null;  // We are not allowed to destroy in here
+      }
+
+      if(element.src === PLACEHOLDER_SRC || tag === "PICTURE" || tag === "FIGURE" || parentElement.children.length === 1 && ELEMENTS_EXPAND_INTO.includes(tag))
+      {
+         console.debug(`H2Z CS going up to`, parentElement);
+
+         // Lots of things could be preventing a size reduction, so we consider...
+         //    A previously zerod hero
+         //    A <picture> that contains our hero
+         //    A <figure> that contains our hero
+         //    Another "container" that contains our hero and nothing else
+         // ...as any of these is grounds for expanding our scope
+         return considerAncestors(parentElement); // This is our new candidate, but keep checking higher
+      }
    }
 
    return element;  // Nope, stick with this one
