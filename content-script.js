@@ -140,6 +140,7 @@ function zeroTheHero(indication, minWidth, minHeight)
             }
 
             _didDestroy = true;
+            zerodCounter();
          }
       }
    }
@@ -193,7 +194,23 @@ function restoreHero(e)
    if(_hero && _zero)
    {
       _zero.parentNode.replaceChild(_hero, _zero);
+      zerodCounter(false);
    }
+}
+
+// Update the counter
+async function zerodCounter(up = true)
+{
+   const storage = await browser.storage.local.get(["zerodCount"]);
+   browser.storage.local.set({"zerodCount": storage.zerodCount + (up ? 1 : -1)}).then(_ => {
+      // In case the options page is open, let it know to refresh the counter
+      browser.runtime.sendMessage({msgType: MSGTYPE_REFRESH_COUNTER}).catch(err => {
+         if(err.message !== "Could not establish connection. Receiving end does not exist.") {
+            console.error("H2Z CS Messaging error:", err);
+         }
+      });
+   });
+
 }
 
 

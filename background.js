@@ -12,7 +12,7 @@ async function initialize(details)
    console.debug("H2Z B Initializing...");
 
    // Preset initialization
-   const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings"]);
+   const storage = await browser.storage.local.get(["version","destroyByDefault","indication","minWidth","minHeight","persiteSettings","zerodCount"]);
    if(Number.isInteger(storage.version))
    {
       if(storage.version < CURRENT_STORAGE_VERSION)
@@ -71,6 +71,12 @@ async function initialize(details)
    else
    {
       storage.persiteSettings = new Map(storage.persiteSettings);
+   }
+
+   if(storage.zerodCount === undefined)
+   {
+      console.info("H2Z B No zerodCount setting found, initializing...");
+      await browser.storage.local.set({"zerodCount": 0});
    }
 
    loadSettings();

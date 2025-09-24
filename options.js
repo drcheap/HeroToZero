@@ -41,6 +41,22 @@ async function populatePerSite()
    }
 }
 
+// Fill in the counter value
+async function populateCounter()
+{
+   const storage = await browser.storage.local.get(["zerodCount"]);
+   document.querySelector("#zerodCount").textContent = storage.zerodCount;
+}
+
+// Zero out the counter value
+async function resetCounter()
+{
+   if(confirm("Reset counter to zero?"))
+   {
+      browser.storage.local.set({"zerodCount": 0}).then(populateCounter);
+   }
+}
+
 // Retrieve all the persisted settings
 async function loadOptions()
 {
@@ -53,6 +69,7 @@ async function loadOptions()
    document.querySelector("#minWidth").value = storage.minWidth;
    document.querySelector("#minHeight").value = storage.minHeight;
    populatePerSite();
+   populateCounter();
 }
 
 // Apply a change of setting: destroyByDefault
@@ -126,10 +143,15 @@ document.querySelectorAll("input[name=destroyByDefault]").forEach(i => { i.addEv
 document.querySelectorAll("input[name=indication]").forEach(i => { i.addEventListener("change", setIndication) });
 document.querySelector("#minWidth").addEventListener("change", setMinWidth);
 document.querySelector("#minHeight").addEventListener("change", setMinHeight);
+document.querySelector("#zerodCount").addEventListener("click", resetCounter);
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
    console.debug("H2Z O Message received", message);
    if(message.msgType === MSGTYPE_REFRESH_PERSITE)
    {
       populatePerSite();
+   }
+   else if(message.msgType === MSGTYPE_REFRESH_COUNTER)
+   {
+      populateCounter();
    }
 });

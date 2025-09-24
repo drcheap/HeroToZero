@@ -37,3 +37,7 @@ fieldset > div:last-child {
    cursor: pointer;
    font-size: 80%;
 }
+
+#zerodCount:hover {
+   cursor: help;
+}
