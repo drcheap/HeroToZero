@@ -4,8 +4,8 @@ const PLACEHOLDER_HEIGHT = 16;
 const PLACEHOLDER_TEXT = "Hero image replaced by HeroToZero";
 const PLACEHOLDER_TEXT_RESTORE = "Click to restore orignal.";
 
-// A list of element types that we should not destroy inside of
-const ELEMENTS_ABORT = ["ASIDE","BODY","LI","MAIN","NAV"];
+// A list of element types that we should not destroy
+const ELEMENTS_ABORT = ["ASIDE","LI","MAIN","NAV","OL"];
 
 // A list of valid element types that we will always expand the hero scope up to, regardless of intermediaries
 const ELEMENTS_EXPAND_ALWAYS = ["FIGURE","IMG","PICTURE","UL"];
@@ -159,8 +159,9 @@ function considerAncestors(element)
          return element;  // Can't determine parent type, stop here
       }
 
-      if(ELEMENTS_ABORT.includes(tag))
+      if(tag === "BODY" && parentElement.children.length === 1 || ELEMENTS_ABORT.includes(tag))
       {
+         console.debug(`H2Z CS disqualified due to`, parentElement);
          return null;  // We are not allowed to destroy in here
       }
 
