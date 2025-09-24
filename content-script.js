@@ -7,8 +7,15 @@ const PLACEHOLDER_TEXT_RESTORE = "Click to restore orignal.";
 // A list of element types that we should not destroy inside of
 const ELEMENTS_ABORT = ["ASIDE","BODY","LI","MAIN","NAV"];
 
-// A list of valid element types that we can expand the hero scope up to
-const ELEMENTS_EXPAND_INTO = ["A","A","B","BLOCKQUOTE","BUTTON","DIV","EM","FIGURE","H1","H2","H3","H4","H5","H6","HEADER","I","LABEL","OBJECT","P","PICTURE","Q","SECTION","SPAN","SPAN","STRONG"];
+// A list of valid element types that we will always expand the hero scope up to, regardless of intermediaries
+const ELEMENTS_EXPAND_ALWAYS = ["FIGURE","IMG","PICTURE","UL"];
+
+// A list of valid element types that we can expand the hero scope up to if it's the only thing contained
+const ELEMENTS_EXPAND_IF_SOLO = ["A","B","BLOCKQUOTE","BUTTON","DIV","EM","H1","H2","H3","H4","H5","H6","HEADER","I","LABEL","OBJECT","P","Q","SECTION","SPAN","SPAN","STRONG"];
+
+// A regex to match for class names that we can expand the hero scope up to
+const REGEX_EXPAND = /\bhero\b/i;
+
 
 let _didDestroy = false;
 let _imgCount = 0;
@@ -138,7 +145,7 @@ function zeroTheHero(indication, minWidth, minHeight)
    }
 }
 
-// Recursively walk up the DOM looking for pure containers
+// Recursively walk up the DOM looking for equivalent containers
 function considerAncestors(element)
 {
    let parentElement = element.parentElement;
@@ -156,17 +163,22 @@ function considerAncestors(element)
          return null;  // We are not allowed to destroy in here
       }
 
-      if(element.src === PLACEHOLDER_SRC || tag === "PICTURE" || tag === "FIGURE" || parentElement.children.length === 1 && ELEMENTS_EXPAND_INTO.includes(tag))
+      let ancestor = parentElement.closest(ELEMENTS_EXPAND_ALWAYS.join(","));
+      if(!ancestor &&  // No always expand
+           (element.src === PLACEHOLDER_SRC ||  // Previously zerod
+            element.clientWidth == parentElement.clientWidth && element.clientHeight == parentElement.clientHeight ||  // Same size as hero
+            parentElement.children.length === 1 && ELEMENTS_EXPAND_IF_SOLO.includes(tag) || // Only child of eligible tag
+            Array.from(parentElement.classList).some(e => REGEX_EXPAND.test(e))  // CSS pattern match
+           )
+        )
       {
-         console.debug(`H2Z CS going up to`, parentElement);
+         ancestor = parentElement;
+      }
 
-         // Lots of things could be preventing a size reduction, so we consider...
-         //    A previously zerod hero
-         //    A <picture> that contains our hero
-         //    A <figure> that contains our hero
-         //    Another "container" that contains our hero and nothing else
-         // ...as any of these is grounds for expanding our scope
-         return considerAncestors(parentElement); // This is our new candidate, but keep checking higher
+      if(ancestor)
+      {
+         console.debug(`H2Z CS going up to`, ancestor);
+         return considerAncestors(ancestor);  // We have a new candidate, but keep checking higher
       }
    }
 
