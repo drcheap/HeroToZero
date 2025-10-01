@@ -108,7 +108,7 @@ function zeroTheHero(indication, minWidth, minHeight)
       if(heroElement && (heroElement instanceof HTMLImageElement || heroElement instanceof HTMLPictureElement || heroElement.tagName === 'FIGURE'))
       {
          // We got one!  Now for a bit of expansion
-         heroElement = considerAncestors(heroElement);
+         heroElement = considerAncestors(heroElement, heroElement);
          console.info(`H2Z CS heroElement`, heroElement);
 
          if(heroElement)
@@ -147,7 +147,7 @@ function zeroTheHero(indication, minWidth, minHeight)
 }
 
 // Recursively walk up the DOM looking for equivalent containers
-function considerAncestors(element)
+function considerAncestors(element, origHero)
 {
    let parentElement = element.parentElement;
    if(parentElement)
@@ -168,7 +168,7 @@ function considerAncestors(element)
       let ancestor = parentElement.closest(ELEMENTS_EXPAND_ALWAYS.join(","));
       if(!ancestor &&  // No always expand
            (element.src === PLACEHOLDER_SRC ||  // Previously zerod
-            element.clientWidth == parentElement.clientWidth && element.clientHeight == parentElement.clientHeight ||  // Same size as hero
+            origHero.clientWidth == parentElement.clientWidth && origHero.clientHeight == parentElement.clientHeight ||  // Exact same size as original hero
             parentElement.children.length === 1 && ELEMENTS_EXPAND_IF_SOLO.includes(tag) || // Only child of eligible tag
             Array.from(parentElement.classList).some(e => REGEX_EXPAND.test(e))  // CSS pattern match
            )
@@ -180,7 +180,7 @@ function considerAncestors(element)
       if(ancestor)
       {
          console.debug(`H2Z CS going up to`, ancestor);
-         return considerAncestors(ancestor);  // We have a new candidate, but keep checking higher
+         return considerAncestors(ancestor, origHero);  // We have a new candidate, but keep checking higher
       }
    }
 
