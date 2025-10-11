@@ -5,7 +5,7 @@ const PLACEHOLDER_TEXT = "Hero image replaced by HeroToZero";
 const PLACEHOLDER_TEXT_RESTORE = "Click to restore orignal.";
 
 // A list of element types that we should not destroy
-const ELEMENTS_ABORT = ["ASIDE","LI","MAIN","NAV","OL"];
+const ELEMENTS_ABORT = ["ASIDE","LI","NAV","OL"];
 
 // A list of valid element types that we will always expand the hero scope up to, regardless of intermediaries
 const ELEMENTS_EXPAND_ALWAYS = ["FIGURE","IMG","PICTURE","UL"];
